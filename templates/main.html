@@ -10,21 +10,9 @@
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/highcharts-more.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
-  <style>
-    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
-    .row.content {height: 550px}
 
-    /* Set gray background color and 100% height */
-    .sidenav {
-      background-color: #f1f1f1;
-      height: 100%;
-    }
+    <link rel="stylesheet" href="{{ url_for('static', filename='Main.css') }}"/>
 
-    /* On small screens, set height to 'auto' for the grid */
-    @media screen and (max-width: 767px) {
-      .row.content {height: auto;}
-    }
-  </style>
 </head>
 <body>
 
@@ -52,12 +40,12 @@
 <div class="container-fluid">
   <div class="row content">
     <div class="col-sm-3 sidenav hidden-xs">
-      <h2>Logo</h2>
+      <h2>What's happening ?</h2>
       <ul class="nav nav-pills nav-stacked">
         <li class="active"><a href="#section1">Dashboard</a></li>
-        <li><a href="#section2">Age</a></li>
-        <li><a href="#section3">Gender</a></li>
-        <li><a href="#section3">Geo</a></li>
+        <li><a href="#section2">House</a></li>
+        <li><a href="#section3">Trips</a></li>
+        <li><a href="#section3">Events</a></li>
       </ul><br>
     </div>
     <br>
@@ -67,13 +55,14 @@
         <h4>Events to come</h4>
         <p><div id="container" style="margin-top: 3em"></div></p>
       </div>
+        <h1> Today </h1>
       <div class="row">
-        <div class="col-sm-3">
+        <div class="col-sm-4">
           <div class="well">
             <h4>Birthdays</h4>
             {% if todays_birthdays|length>0 %}
-             {% for item in todays_birthdays %}
-			   <p>{{ item }}</p>
+             {% for item,item2,age in todays_birthdays %}
+			   <p>{{ item }} {{ item2 }} {{ age }} years old  </p>
 			  {% endfor %}
 			 {% else %}
 			   <p>No Birthdays Today :(</p>
@@ -81,12 +70,12 @@
 
           </div>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
           <div class="well">
             <h4>Saint's day</h4>
             {% if todays_saintsday|length>0 %}
-             {% for item in todays_saintsday %}
-			   <p>{{ item }}</p>
+             {% for item,item2,age in todays_saintsday %}
+			   <p>{{ item }} {{ item2 }} </p>
 			  {% endfor %}
 			 {% else %}
 			   <p>No Saint's day to celebrate today :(</p>
@@ -94,34 +83,32 @@
 
           </div>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
           <div class="well">
-            <h4>Today</h4>
+            <h4>Events</h4>
             <p style="display: inline">22 </p><p style="display: inline">jan</p>
           </div>
         </div>
-        <div class="col-sm-3">
-          <div class="well">
-            <h4>Bounce</h4>
-            <p>30%</p>
-          </div>
-        </div>
+
       </div>
+
+        <h1>Coming Soon</h1>
+
       <div class="row">
 
         <div class="col-sm-4">
           <div class="well">
-            <h4>Next Birthdays</h4>
+            <h4>Birthdays</h4>
              {% for item,item2,age,date in next_birthdays %}
-			   <p>{{ item }} {{ item2 }} {{ age }} years old ({{ date }}) </p>
+			   <p>{{ date }} : {{ item }} {{ item2 }} {{ age }} years old </p>
 			  {% endfor %}
           </div>
         </div>
         <div class="col-sm-4">
           <div class="well">
-            <h4>Next Saint's day</h4>
+            <h4>Saint's day</h4>
              {% for item,item2,age,date in next_saintsday %}
-			   <p>{{ item }} {{ item2 }} {{ date }}</p>
+			   <p>{{ date }} : {{ item }} {{ item2 }} </p>
 			  {% endfor %}
           </div>
         </div>
@@ -152,9 +139,11 @@
 
 <script>
 
-var values = [1]
-var labels= ["ok"]
+var Data= {{ plot_data  | safe}}
+var values = Data[1]
+var labels=Data[0]
 
+console.log(Data)
 Highcharts.chart('container', {
     chart: {
         zoomType: 'xy'

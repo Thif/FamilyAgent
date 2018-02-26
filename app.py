@@ -28,7 +28,13 @@ def read_data(file):
 	
 def Get_name_list_for_today(df,type):
 	df_temp=df.copy()
-	return df_temp[(df_temp[type].dt.month==TODAYS_DATE.month) & (df_temp[type].dt.day==TODAYS_DATE.day)]["Firstname"].values
+	firstname=df_temp[(df_temp[type].dt.month==TODAYS_DATE.month) & (df_temp[type].dt.day==TODAYS_DATE.day)]["Firstname"].values
+	lastname = df_temp[(df_temp[type].dt.month == TODAYS_DATE.month) & (df_temp[type].dt.day == TODAYS_DATE.day)][
+		"Lastname"].values
+	ages = np.rint(df_temp[(df_temp[type].dt.month == TODAYS_DATE.month) & (df_temp[type].dt.day == TODAYS_DATE.day)][
+		"Age"]).values
+
+	return zip(firstname, lastname, ages.astype(int))
 
 def Add_age(df):
 	df_temp=df.copy()
@@ -38,40 +44,42 @@ def Add_age(df):
 
 def Get_name_list_of_next(df,type,number):
 	df_temp=df.copy()
-	if type=="Saintsday":
-		df_temp["temp_date"]=pd.to_datetime((TODAYS_DATE.year*10000+df_temp["Saintsday"].dt.month*100+df_temp["Saintsday"].dt.day).apply(str),format='%Y%m%d')	
-	else:
-		df_temp["temp_date"]=pd.to_datetime((TODAYS_DATE.year*10000+df_temp["Birthday"].dt.month*100+df_temp["Birthday"].dt.day).apply(str),format='%Y%m%d')
-		
+
+	df_temp["temp_date"]=pd.to_datetime((TODAYS_DATE.year*10000+df_temp[type].dt.month*100+df_temp[type].dt.day).apply(str),format='%Y%m%d')
 	df_temp["TimeDelta"]=df_temp["temp_date"]-TODAYS_DATE.date()
 	df_temp["Delta"]=df_temp["TimeDelta"]
+	df_temp=df_temp[df_temp["Delta"].dt.days!=0] # avoid current
 	df_temp.loc[df_temp["TimeDelta"].dt.days<0,"Delta"]=df_temp["TimeDelta"]+dt.timedelta(days=365)
-		
-	
+
 	firstname=df_temp.nsmallest(number, 'Delta')["Firstname"].values
 	lastname=df_temp.nsmallest(number, 'Delta')["Lastname"].values
-	ages=np.round_(df[df["Firstname"].isin(firstname)]["Age"]).values
-	birthday=df[df["Firstname"].isin(firstname)]["Birthday"].dt.date
-	
-	
+	ages=np.rint(df_temp.nsmallest(number, 'Delta')["Age"]).values
 
-	return zip(firstname,lastname,ages,birthday)
+	day = df_temp.nsmallest(number, 'Delta')[type].dt.strftime("%B %d")
+
+	return zip(firstname,lastname,ages.astype(int),day)
 	
 def Get_todays_events(df):
 	return
+
+def Plot_event_data(df):
+
+	return zip(df["Birthday"].dt.strftime("%d/%m/%y").tolist(),df["Age"].tolist())
 	
 @app.route('/', methods=['POST','GET'])
 def main():
 
 	df=read_data(FILEPATH)
+
 	df=Add_age(df)
 	
 	todays_birthdays=Get_name_list_for_today(df,"Birthday")
 	todays_saintsday=Get_name_list_for_today(df,"Saintsday")
 	next_birthdays=Get_name_list_of_next(df,"Birthday",3)
 	next_saintsday=days=Get_name_list_of_next(df,"Saintsday",3)
+	plot_data=Plot_event_data(df)
 
-	return render_template('main.html',todays_birthdays=todays_birthdays,todays_saintsday=todays_saintsday,next_birthdays=next_birthdays,next_saintsday=next_saintsday)
+	return render_template('main.html',todays_birthdays=todays_birthdays,todays_saintsday=todays_saintsday,next_birthdays=next_birthdays,next_saintsday=next_saintsday,plot_data=plot_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
