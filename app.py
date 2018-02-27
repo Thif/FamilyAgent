@@ -1,9 +1,10 @@
 from flask import Flask,render_template, flash, request,url_for
 import pandas as pd
 import numpy as np
-import pandas as pd
 import datetime as dt
-
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 app = Flask(__name__)
@@ -12,7 +13,43 @@ app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
 
 TODAYS_DATE= dt.datetime.now()
 FILEPATH="./data/Key_dates.csv"
+GMAIL_ADDRESS=""
+GMAIL_PASSWORD=""
+SENDER_NAME="Thibaut Forest"
 
+def send_email(receiver_email,receiver_name,content):
+
+	
+	msg = MIMEMultipart('alternative')
+	msg['Subject'] = "Daily news - Forest Family"
+	msg['From'] = SENDER_NAME
+	msg['To'] = receiver_email
+	
+	# Create the body of the message (a plain-text and an HTML version).
+
+	html = """\
+	<html>
+	  <head></head>
+	  <body>
+	    <h2>Hi """ +str(receiver_name)+"""!</h2><br>
+	       <h4><i>Today we celebrate</i></h4>
+	       <h2><font color="red">""" +str(content)+"""</font></h2>
+	       <h4><i>Birthday</i></h4>
+	    <img src=https://media3.giphy.com/media/qFnzbxQhHG3xS/200w.gif >
+	  </body>
+	</html>
+	"""
+
+	part = MIMEText(html, 'html')
+	msg.attach(part)
+
+	s = smtplib.SMTP('smtp.gmail.com:587')
+	s.ehlo()
+	s.starttls()
+	s.login(GMAIL_ADDRESS, GMAIL_PASSWORD)
+	s.sendmail(GMAIL_ADDRESS, receiver_email, msg.as_string())
+	s.quit()
+	
 def yearsago(years, from_date=None):
     if from_date is None:
         from_date = datetime.now()
@@ -78,7 +115,8 @@ def main():
 	next_birthdays=Get_name_list_of_next(df,"Birthday",3)
 	next_saintsday=days=Get_name_list_of_next(df,"Saintsday",3)
 	plot_data=Plot_event_data(df)
-
+	send_email(GMAIL_ADDRESS,SENDER_NAME,"content")
+	
 	return render_template('main.html',todays_birthdays=todays_birthdays,todays_saintsday=todays_saintsday,next_birthdays=next_birthdays,next_saintsday=next_saintsday,plot_data=plot_data)
 
 if __name__ == '__main__':
